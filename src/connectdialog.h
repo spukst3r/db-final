@@ -26,7 +26,7 @@ protected:
 
 	void init_widgets();
 	void parse_config();
-	void create_deafult_config(Glib::RefPtr<Gio::File> cfg_file);
+	void create_default_config(Glib::RefPtr<Gio::FileOutputStream> cfg_file);
 
 	Gtk::VBox main_vbox;
 	Gtk::Button connect, close;

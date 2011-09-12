@@ -8,8 +8,9 @@
 #include <giomm/file.h>
 
 #include <iostream>
+#include <vector>
 
-using std::cout;
+using std::cerr;
 using std::endl;
 
 ConnectDialog::ConnectDialog():
@@ -60,38 +61,51 @@ void ConnectDialog::init_widgets()
 
 void ConnectDialog::parse_config()
 {
-	Glib::ustring config_file_name = "~/." PROJECT_TITLE;
-	config_file_name = config_file_name.lowercase();
+	Glib::ustring config_file_name = Glib::get_home_dir();
+	config_file_name += "/." PROJECT_TITLE;
 
 	Glib::KeyFile config_file;
-	Glib::RefPtr<Gio::File> new_config;
+	Glib::RefPtr<Gio::File> file;
 
 	try {
 		config_file.load_from_file(config_file_name);
 	} catch (const Glib::Error &e) {
 		if (e.code() == Glib::FileError::NO_SUCH_ENTITY) {
-			Gtk::MessageDialog msg("Creating new config...");
-			msg.run();
-			new_config = Gio::File::create_for_path(config_file_name);
+			cerr << "Config file not find, creating new one..." << endl;
+
+			file = Gio::File::create_for_path(config_file_name);
+
 			try {
-				new_config->create_file(Gio::FILE_CREATE_PRIVATE);
+				Glib::RefPtr<Gio::FileOutputStream> new_config = 
+					file->create_file(Gio::FILE_CREATE_PRIVATE);
+				create_default_config(new_config);
 			} catch (const Glib::Error &e) {
-				cout << e.what() << endl;
+				cerr << "parse_config(): Creation of config file failed! \
+										 what(): " << e.what() << endl;
 			}
 		}
 	}
 
 	try {
-		Glib::ArrayHandle<Glib::ustring> logins = 
+		std::vector<Glib::ustring> logins = 
 			config_file.get_string_list("Account", "logins");
+
+		for (int i=0; i<logins.size(); i++)
+			cerr << logins[i] << endl;
+
 	} catch (const Glib::Error &e) {
-		Gtk::MessageDialog msg("logins key not found");
-		msg.run();
+		cerr << "parse_config(): logins key not found" << endl;
 	}
 }
 
-void ConnectDialog::create_deafult_config(Glib::RefPtr<Gio::File> cfg_file)
+void ConnectDialog::create_default_config(Glib::RefPtr<Gio::FileOutputStream> cfg_file)
 {
+	cfg_file->write("# configuration file for " PROJECT_TITLE "\n");
+	cfg_file->write("# Lines beginning with a '#' and blank lines are ignored\n");
+	cfg_file->write("# Groups are started by a header line containing the group "
+			"name enclosed in '[' and ']'\n");
+
+	cfg_file->close();
 }
 
 void ConnectDialog::on_connect_button_clicked()
