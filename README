@@ -5,7 +5,7 @@ Requirements:
 gtkmm-2.4
 cmake 2.6+
 
-Installation:
+Compilation:
 
 cmake .
 make
