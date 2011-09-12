@@ -1,6 +1,7 @@
 *.o
 CMake*
 !CMakeLists.txt
+*.swp
 lab.h
 cmake_install.cmake
 untitled
