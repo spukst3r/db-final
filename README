@@ -4,3 +4,11 @@ Cloud, upload and share your own music with others
 Requirements:
 gtkmm-2.4
 cmake 2.6+
+
+Installation:
+
+cmake .
+make
+
+Executables'll be in src/ folder
+
