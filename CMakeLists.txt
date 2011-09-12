@@ -6,16 +6,5 @@ project(${PROJECT_TITLE})
 find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-2.4)
 
-include_directories(${GTKMM_LIBRARY_DIRS})
-include_directories(${GTKMM_INCLUDE_DIRS})
-
-configure_file (
-	"${PROJECT_SOURCE_DIR}/lab.h.in"
-	"${PROJECT_BINARY_DIR}/lab.h"
-	)
-
-set(SOURCES main.cpp connectdialog.cpp)
-set(HEADERS connectdialog.h)
-add_executable(${PROJECT_TITLE} ${SOURCES})
-target_link_libraries(${PROJECT_TITLE} ${GTKMM_LIBRARIES})
+add_subdirectory(src)
 
