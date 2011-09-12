@@ -1,0 +1,7 @@
+#ifndef _LAB_H_
+#define _LAB_H_
+
+#define PROJECT_TITLE "@PROJECT_TITLE@"
+
+#endif
+

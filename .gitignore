@@ -1,0 +1,7 @@
+*.o
+CMake*
+!CMakeLists.txt
+lab.h
+cmake_install.cmake
+untitled
+Makefile
