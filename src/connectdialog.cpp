@@ -19,7 +19,6 @@ ConnectDialog::ConnectDialog():
 	close(Gtk::Stock::CLOSE),
 	button_box(Gtk::BUTTONBOX_SPREAD, 5),
 	label_login("Login:"),
-	label_password("Password:"),
 	save_login("Remember login"),
 	combo_login(true)
 {
@@ -41,13 +40,8 @@ void ConnectDialog::init_widgets()
 	close.signal_clicked().connect(sigc::mem_fun(*this,
 				&ConnectDialog::on_close_button_clicked));
 
-	entry_password.property_caps_lock_warning() = true;
-	entry_password.set_visibility(false);
-
 	main_vbox.add(label_login);
 	main_vbox.add(combo_login);
-	main_vbox.add(label_password);
-	main_vbox.add(entry_password);
 	main_vbox.add(save_login);
 
 	button_box.add(connect);

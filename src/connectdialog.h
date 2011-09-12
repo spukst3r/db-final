@@ -40,8 +40,7 @@ protected:
 	Gtk::Button connect, close;
 	Gtk::CheckButton save_login;
 	Gtk::HButtonBox button_box;
-	Gtk::Label label_login, label_password;
-	Gtk::Entry entry_password;
+	Gtk::Label label_login;
 	Gtk::ComboBoxText combo_login;
 };
 
