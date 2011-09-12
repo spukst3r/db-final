@@ -20,7 +20,8 @@ ConnectDialog::ConnectDialog():
 	button_box(Gtk::BUTTONBOX_SPREAD, 5),
 	label_login("Login:"),
 	label_password("Password:"),
-	save_login("Remember login")
+	save_login("Remember login"),
+	combo_login(true)
 {
 	parse_config();
 	init_widgets();
@@ -57,6 +58,12 @@ void ConnectDialog::init_widgets()
 
 	add(main_vbox);
 	show_all();
+
+	combo_login.remove_all();
+	for (int i=0; i<logins.size(); i++) {
+		combo_login.append(logins[i]);
+	}
+	combo_login.set_active(0);
 }
 
 void ConnectDialog::parse_config()
@@ -66,46 +73,54 @@ void ConnectDialog::parse_config()
 
 	Glib::KeyFile config_file;
 	Glib::RefPtr<Gio::File> file;
+	Glib::RefPtr<Gio::FileOutputStream> new_config;
 
-	try {
+	file = Gio::File::create_for_path(config_file_name);
+
+	if (file->query_exists()) {
 		config_file.load_from_file(config_file_name);
-	} catch (const Glib::Error &e) {
-		if (e.code() == Glib::FileError::NO_SUCH_ENTITY) {
-			cerr << "Config file not find, creating new one..." << endl;
+	} else {
+		cerr << "Config file not found, creating default one" << endl;
 
-			file = Gio::File::create_for_path(config_file_name);
-
-			try {
-				Glib::RefPtr<Gio::FileOutputStream> new_config = 
-					file->create_file(Gio::FILE_CREATE_PRIVATE);
-				create_default_config(new_config);
-			} catch (const Glib::Error &e) {
-				cerr << "parse_config(): Creation of config file failed! \
-										 what(): " << e.what() << endl;
-			}
+		try {
+			new_config = file->create_file(Gio::FILE_CREATE_PRIVATE);
+			create_default_config(new_config);
+			new_config->close();
+		} catch (const Glib::Error &e) {
+			cerr << "parse_config(): Creation of config file failed! "
+									 "what(): " << e.what() << endl;
 		}
+
+		config_file.load_from_file(config_file_name);
 	}
 
 	try {
-		std::vector<Glib::ustring> logins = 
+		logins =
 			config_file.get_string_list("Account", "logins");
-
-		for (int i=0; i<logins.size(); i++)
-			cerr << logins[i] << endl;
-
 	} catch (const Glib::Error &e) {
-		cerr << "parse_config(): logins key not found" << endl;
+		cerr << "parse_config(): " << e.what() << endl;
 	}
 }
 
 void ConnectDialog::create_default_config(Glib::RefPtr<Gio::FileOutputStream> cfg_file)
 {
-	cfg_file->write("# configuration file for " PROJECT_TITLE "\n");
-	cfg_file->write("# Lines beginning with a '#' and blank lines are ignored\n");
-	cfg_file->write("# Groups are started by a header line containing the group "
-			"name enclosed in '[' and ']'\n");
+	Glib::ustring config_lines[] = {
+		"# Configuration file for " PROJECT_TITLE "\n",
+		"# Lines beginning with a '#' and blank lines are ignored\n",
+		"# Groups are started by a header line containing the group name enclosed in '[' and ']'\n\n",
+		"# Group for remembered account settings\n",
+		"[Account]\n",
+		"logins=\n\n",
+		"public_key=\n\n",
+		"# Group for DB conection settings\n",
+		"[Connection]\n",
+		"server=127.0.0.1\n",
+		"login=guest\n",
+		"password=guest_passwd\n\n",
+	};
 
-	cfg_file->close();
+	for (int i=0; i<sizeof(config_lines)/sizeof(config_lines[0]); i++)
+		cfg_file->write(config_lines[i]);
 }
 
 void ConnectDialog::on_connect_button_clicked()
