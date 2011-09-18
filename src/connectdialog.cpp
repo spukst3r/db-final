@@ -40,6 +40,16 @@ void ConnectDialog::init_widgets()
 	close.signal_clicked().connect(sigc::mem_fun(*this,
 				&ConnectDialog::on_close_button_clicked));
 
+	ref_treemodel = Gtk::ListStore::create(columns);
+	combo_login.set_model(ref_treemodel);
+
+	for (int i=0; i<logins.size(); i++) {
+		Gtk::TreeModel::Row row = *(ref_treemodel->append());
+		row[columns.text] = logins[i];
+	}
+
+	combo_login.set_entry_text_column(columns.text);
+
 	main_vbox.add(label_login);
 	main_vbox.add(combo_login);
 	main_vbox.add(save_login);
@@ -51,13 +61,7 @@ void ConnectDialog::init_widgets()
 	main_vbox.show_all();
 
 	add(main_vbox);
-	show_all();
-
-	combo_login.remove_all();
-	for (int i=0; i<logins.size(); i++) {
-		combo_login.append(logins[i]);
-	}
-	combo_login.set_active(0);
+	show_all_children();
 }
 
 void ConnectDialog::parse_config()

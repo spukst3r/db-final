@@ -8,9 +8,11 @@
 #include <gtkmm/buttonbox.h>
 #include <gtkmm/button.h>
 #include <gtkmm/entry.h>
-#include <gtkmm/comboboxtext.h>
+#include <gtkmm/combobox.h>
+#include <gtkmm/liststore.h>
 #include <gtkmm/label.h>
 #include <gtkmm/checkbutton.h>
+#include <gtkmm/treestore.h>
 #include <giomm/file.h>
 #include <glibmm/ustring.h>
 
@@ -33,6 +35,18 @@ protected:
 	void parse_config();
 	void create_default_config(Glib::RefPtr<Gio::FileOutputStream> cfg_file);
 
+	// Column Model for ComboBox
+	class ModelColumns:
+		public Gtk::TreeModel::ColumnRecord
+	{
+	public:
+		ModelColumns() { add(text); }
+
+		Gtk::TreeModelColumn<Glib::ustring> text;
+	};
+
+	ModelColumns columns;
+
 	// Configuration
 	std::vector<Glib::ustring> logins;
 
@@ -41,7 +55,9 @@ protected:
 	Gtk::CheckButton save_login;
 	Gtk::HButtonBox button_box;
 	Gtk::Label label_login;
-	Gtk::ComboBoxText combo_login;
+	Gtk::ComboBox combo_login;
+
+	Glib::RefPtr<Gtk::ListStore> ref_treemodel;
 };
 
 #endif
