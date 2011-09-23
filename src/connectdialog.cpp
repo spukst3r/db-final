@@ -7,10 +7,13 @@
 #include <glibmm/fileutils.h>
 #include <giomm/file.h>
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
+#include <string>
 
 using std::cerr;
+using std::cout;
 using std::endl;
 
 ConnectDialog::ConnectDialog():
@@ -24,10 +27,24 @@ ConnectDialog::ConnectDialog():
 {
 	parse_config();
 	init_widgets();
+	save_login_checked = false;
+	config_changed = false;
 }
 
 ConnectDialog::~ConnectDialog()
 {
+	// Save everything we've changed to config file
+	if (config_changed) {
+		Glib::ustring config_file_name = Glib::get_home_dir();
+		config_file_name += "/." PROJECT_TITLE;
+
+		Glib::RefPtr<Gio::File> file;
+
+		file = Gio::File::create_for_path(config_file_name);
+
+		std::string etag;
+		file->replace_contents(config_file.to_data(), "", etag);
+	}
 }
 
 void ConnectDialog::init_widgets()
@@ -39,6 +56,8 @@ void ConnectDialog::init_widgets()
 				&ConnectDialog::on_connect_button_clicked));
 	close.signal_clicked().connect(sigc::mem_fun(*this,
 				&ConnectDialog::on_close_button_clicked));
+	save_login.signal_toggled().connect(sigc::mem_fun(*this,
+				&ConnectDialog::on_save_login_toggled));
 
 	ref_treemodel = Gtk::ListStore::create(columns);
 	combo_login.set_model(ref_treemodel);
@@ -49,6 +68,7 @@ void ConnectDialog::init_widgets()
 	}
 
 	combo_login.set_entry_text_column(columns.text);
+	combo_login.set_active(0);
 
 	main_vbox.add(label_login);
 	main_vbox.add(combo_login);
@@ -69,14 +89,13 @@ void ConnectDialog::parse_config()
 	Glib::ustring config_file_name = Glib::get_home_dir();
 	config_file_name += "/." PROJECT_TITLE;
 
-	Glib::KeyFile config_file;
 	Glib::RefPtr<Gio::File> file;
 	Glib::RefPtr<Gio::FileOutputStream> new_config;
 
 	file = Gio::File::create_for_path(config_file_name);
 
 	if (file->query_exists()) {
-		config_file.load_from_file(config_file_name);
+		config_file.load_from_file(config_file_name, Glib::KEY_FILE_KEEP_COMMENTS);
 	} else {
 		cerr << "Config file not found, creating default one" << endl;
 
@@ -87,6 +106,7 @@ void ConnectDialog::parse_config()
 		} catch (const Glib::Error &e) {
 			cerr << "parse_config(): Creation of config file failed! "
 									 "what(): " << e.what() << endl;
+			return;
 		}
 
 		config_file.load_from_file(config_file_name);
@@ -108,7 +128,7 @@ void ConnectDialog::create_default_config(Glib::RefPtr<Gio::FileOutputStream> cf
 		"# Groups are started by a header line containing the group name enclosed in '[' and ']'\n\n",
 		"# Group for remembered account settings\n",
 		"[Account]\n",
-		"logins=\n\n",
+		"logins=\n",
 		"public_key=\n\n",
 		"# Group for DB conection settings\n",
 		"[Connection]\n",
@@ -123,10 +143,35 @@ void ConnectDialog::create_default_config(Glib::RefPtr<Gio::FileOutputStream> cf
 
 void ConnectDialog::on_connect_button_clicked()
 {
+	Glib::ustring login = combo_login.get_entry_text();
+
+	if (login.empty()) {
+		Gtk::MessageDialog dialog("<b>Error</b>\nPlease enter your login!", true);
+		dialog.run();
+		return;
+	}
+
+	if (save_login_checked) {
+		std::vector<Glib::ustring>::iterator it_curr_login =
+			std::find(logins.begin(), logins.end(), login);
+
+		if (it_curr_login < logins.end())
+			logins.erase(it_curr_login);
+
+		logins.insert(logins.begin(), login);
+
+		config_file.set_string_list("Account", "logins", logins);
+		config_changed = true;
+	}
 }
 
 void ConnectDialog::on_close_button_clicked()
 {
 	Gtk::Main::quit();
+}
+
+void ConnectDialog::on_save_login_toggled()
+{
+	save_login_checked = !save_login_checked;
 }
 

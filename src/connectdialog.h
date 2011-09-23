@@ -29,6 +29,7 @@ protected:
 	// Signals
 	void on_connect_button_clicked();
 	void on_close_button_clicked();
+	void on_save_login_toggled();
 
 	// Funcs
 	void init_widgets();
@@ -57,7 +58,12 @@ protected:
 	Gtk::Label label_login;
 	Gtk::ComboBox combo_login;
 
+	Glib::KeyFile config_file;
 	Glib::RefPtr<Gtk::ListStore> ref_treemodel;
+
+private:
+	bool save_login_checked;
+	bool config_changed;
 };
 
 #endif
